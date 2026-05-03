@@ -1,0 +1,1678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chargebee — Contract Intelligence</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --cb-navy: #1a1f36;
+    --cb-navy-light: #242b45;
+    --cb-navy-hover: #2d3454;
+    --cb-purple: #6366f1;
+    --cb-purple-light: #818cf8;
+    --cb-purple-dim: rgba(99,102,241,0.12);
+    --cb-green: #10b981;
+    --cb-green-dim: rgba(16,185,129,0.12);
+    --cb-yellow: #f59e0b;
+    --cb-red: #ef4444;
+    --cb-red-dim: rgba(239,68,68,0.1);
+    --cb-bg: #f4f5f7;
+    --cb-white: #ffffff;
+    --cb-border: #e5e7eb;
+    --cb-text: #111827;
+    --cb-text-2: #6b7280;
+    --cb-text-3: #9ca3af;
+    --sidebar-w: 220px;
+    --header-h: 56px;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cb-bg);
+    color: var(--cb-text);
+    min-height: 100vh;
+    display: flex;
+    overflow-x: hidden;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: var(--sidebar-w);
+    background: white;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    z-index: 100;
+    border-right: 1px solid #e2e8f0;
+    overflow-y: auto;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  /* Dark teal top bar — "Billing" header */
+  .sidebar-billing-bar {
+    background: #1a3a4a;
+    padding: 12px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer;
+  }
+  .billing-bar-left { display: flex; align-items: center; gap: 8px; }
+  .billing-icon { color: #e84d4d; font-size: 16px; }
+  .billing-label { color: white; font-size: 14px; font-weight: 600; }
+  .billing-arrow { color: rgba(255,255,255,0.6); font-size: 14px; }
+
+  /* Site switcher row */
+  .site-switcher {
+    padding: 10px 14px;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer; background: white;
+  }
+  .site-switcher:hover { background: #f8fafc; }
+  .site-info { display: flex; align-items: center; gap: 8px; }
+  .site-icon {
+    width: 28px; height: 28px; border-radius: 50%;
+    border: 1px solid #e2e8f0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; color: #64748b; flex-shrink: 0;
+  }
+  .site-name { font-size: 13px; font-weight: 600; color: #1e293b; line-height: 1.2; }
+  .site-sub { font-size: 10px; color: #94a3b8; }
+  .site-test-badge {
+    font-size: 10px; background: #fbbf24; color: #1e293b;
+    padding: 2px 8px; border-radius: 3px; font-weight: 700;
+  }
+  .site-chevron { color: #94a3b8; font-size: 12px; }
+
+  /* Search bar */
+  .sidebar-search {
+    padding: 8px 12px;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  .sidebar-search-inner {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 10px; border-radius: 6px;
+    background: #f8fafc; border: 1px solid #e2e8f0;
+    cursor: pointer;
+  }
+  .sidebar-search-inner span { font-size: 12.5px; color: #94a3b8; flex: 1; }
+  .sidebar-search-kbd {
+    font-size: 10px; color: #94a3b8;
+    background: white; border: 1px solid #e2e8f0;
+    padding: 1px 5px; border-radius: 3px;
+  }
+
+  .sidebar-nav { flex: 1; padding: 4px 0; }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 9px;
+    padding: 7px 16px; cursor: pointer;
+    color: #475569; font-size: 13px; font-weight: 400;
+    transition: all 0.1s; position: relative;
+    border-radius: 0;
+  }
+  .nav-item:hover { background: #f8fafc; color: #1e293b; }
+  .nav-item.active {
+    background: #f1f5f9; color: #1e293b; font-weight: 600;
+    border-left: none;
+  }
+  .nav-item.active .nav-icon-img { color: #1e293b; }
+
+  .nav-icon-img {
+    width: 16px; height: 16px; flex-shrink: 0; color: #64748b;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+  .nav-chevron { margin-left: auto; color: #94a3b8; font-size: 11px; }
+
+  .nav-divider { height: 1px; background: #f1f5f9; margin: 4px 0; }
+
+  .new-pill {
+    font-size: 9px; background: #1e40af; color: white;
+    padding: 1px 5px; border-radius: 3px; font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+
+  .nav-item.highlight {
+    color: #6366f1; font-weight: 500;
+    margin: 2px 8px; border-radius: 6px;
+    border: 1px solid #e0e7ff; background: #eef2ff;
+    padding: 7px 10px;
+  }
+  .nav-item.highlight:hover { background: #e0e7ff; }
+
+  /* Bottom section */
+  .sidebar-bottom {
+    border-top: 1px solid #f1f5f9;
+    padding: 4px 0;
+  }
+
+  .user-item { padding: 8px 14px; gap: 8px; }
+  .user-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: #475569;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 11px; font-weight: 700; flex-shrink: 0;
+  }
+  .user-info { flex: 1; min-width: 0; }
+  .user-name { font-size: 12px; font-weight: 600; color: #1e293b; }
+  .user-email { font-size: 10px; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* ── MAIN LAYOUT ── */
+  .main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  .topbar {
+    height: var(--header-h);
+    background: white;
+    border-bottom: 1px solid var(--cb-border);
+    display: flex; align-items: center;
+    padding: 0 20px;
+    gap: 12px;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .topbar-search {
+    display: flex; align-items: center; gap: 8px;
+    background: #f9fafb; border: 1px solid var(--cb-border);
+    border-radius: 6px; padding: 6px 12px;
+    width: 200px; cursor: pointer;
+  }
+  .topbar-spacer { flex: 1; }
+  .topbar-actions { display: flex; align-items: center; gap: 8px; }
+  .topbar-icon {
+    width: 32px; height: 32px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 15px;
+    color: var(--cb-text-2); background: none;
+  }
+  .topbar-icon:hover { background: var(--cb-bg); }
+
+  .avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 12px; font-weight: 600;
+  }
+  .topbar-title { font-size: 15px; font-weight: 600; color: var(--cb-text); }
+  .topbar-subtitle { font-size: 13px; color: var(--cb-text-2); margin-left: 4px; }
+
+  /* ── PAGE CONTENT ── */
+  .page { display: none; padding: 28px; flex: 1; }
+  .page.active { display: block; }
+
+  /* ── DASHBOARD PAGE ── */
+  .test-bar {
+    background: #fef9c3; color: #713f12;
+    font-size: 12px; text-align: center;
+    padding: 6px; border-bottom: 1px solid #fde68a;
+    font-weight: 500;
+  }
+  .cb-section {
+    background: white; border: 1px solid #e2e8f0;
+    border-radius: 10px; padding: 20px 24px;
+    margin-bottom: 16px;
+  }
+  .onboard-banner {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .onboard-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .onboard-days { background: #fef3c7; color: #92400e; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 4px; }
+  .onboard-text { font-size: 13px; color: #475569; }
+  .onboard-link { font-size: 13px; color: #6366f1; font-weight: 500; text-decoration: none; }
+  .onboard-link:hover { text-decoration: underline; }
+  .btn-talk { background: #6366f1; color: white; border: none; border-radius: 6px; padding: 9px 18px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; white-space: nowrap; }
+  .btn-talk:hover { background: #5558e8; }
+
+  .learn-title { font-size: 13px; color: #475569; margin-bottom: 14px; }
+  .learn-cards { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 4px; }
+  .learn-card { flex-shrink: 0; width: 220px; cursor: pointer; }
+  .learn-thumb {
+    border-radius: 10px; height: 120px;
+    display: flex; flex-direction: column;
+    justify-content: space-between; padding: 12px;
+    position: relative;
+  }
+  .learn-card-title { color: white; font-size: 13px; font-weight: 700; line-height: 1.3; max-width: 80%; }
+  .play-btn {
+    position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+    width: 32px; height: 32px; background: rgba(255,255,255,0.15);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 11px; border: 2px solid rgba(255,255,255,0.35);
+  }
+  .learn-duration { position: absolute; bottom: 10px; left: 12px; font-size: 11px; color: rgba(255,255,255,0.8); font-weight: 500; }
+
+  .sample-notice { font-size: 12.5px; color: #64748b; padding: 10px 0; margin-bottom: 12px; }
+
+  .kpi-row { display: grid; grid-template-columns: repeat(5,1fr); gap: 0; margin-bottom: 16px; background: white; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; }
+  .kpi-card { padding: 18px 20px; border-right: 1px solid #e2e8f0; }
+  .kpi-card:last-child { border-right: none; }
+  .kpi-label { font-size: 12px; color: #64748b; font-weight: 400; margin-bottom: 10px; line-height: 1.4; display: flex; align-items: flex-start; gap: 4px; flex-wrap: wrap; }
+  .kpi-info { color: #94a3b8; font-size: 11px; cursor: help; }
+  .kpi-value { font-size: 22px; font-weight: 700; color: #0f172a; letter-spacing: -0.5px; }
+
+  .chart-period-row { display: flex; gap: 0; margin-bottom: 16px; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; width: fit-content; background: white; }
+  .chart-tab { background: white; border: none; border-right: 1px solid #e2e8f0; padding: 6px 14px; font-size: 12px; color: #475569; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+  .chart-tab:last-child { border-right: none; }
+  .chart-tab.active { background: #eff6ff; color: #3b82f6; font-weight: 600; }
+  .chart-tab:hover:not(.active) { background: #f8fafc; }
+
+  .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .chart-card { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px 20px; }
+  .chart-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+  .chart-title { font-size: 13px; font-weight: 600; color: #1e293b; }
+  .chart-icons { display: flex; gap: 10px; color: #94a3b8; font-size: 13px; cursor: pointer; }
+  .chart-val { font-size: 20px; font-weight: 700; color: #0f172a; margin-bottom: 12px; letter-spacing: -0.3px; }
+  .chart-apr { font-size: 12px; color: #94a3b8; font-weight: 400; }
+  .chart-legend { display: flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 11px; color: #64748b; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+    /* ── UPLOAD PAGE ── */
+  .upload-page-wrap {
+    max-width: 860px; margin: 0 auto;
+  }
+
+  .page-heading { font-size: 20px; font-weight: 700; color: var(--cb-text); margin-bottom: 4px; }
+  .page-sub { font-size: 13.5px; color: var(--cb-text-2); margin-bottom: 28px; }
+
+  /* ── STEPPER ── */
+  .stepper {
+    display: flex; align-items: center;
+    background: white; border: 1px solid var(--cb-border);
+    border-radius: 10px; padding: 16px 24px;
+    margin-bottom: 24px; gap: 0;
+  }
+  .step {
+    display: flex; align-items: center; gap: 10px;
+    flex: 1;
+  }
+  .step-num {
+    width: 26px; height: 26px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700;
+    border: 2px solid var(--cb-border);
+    color: var(--cb-text-3);
+    flex-shrink: 0; transition: all 0.3s;
+  }
+  .step.done .step-num { background: var(--cb-green); border-color: var(--cb-green); color: white; }
+  .step.active .step-num { background: var(--cb-purple); border-color: var(--cb-purple); color: white; }
+  .step-label { font-size: 12px; font-weight: 500; color: var(--cb-text-3); transition: all 0.3s; }
+  .step.active .step-label { color: var(--cb-purple); font-weight: 600; }
+  .step.done .step-label { color: var(--cb-green); }
+  .step-connector { flex: 1; height: 2px; background: var(--cb-border); margin: 0 8px; max-width: 40px; }
+  .step-connector.done { background: var(--cb-green); }
+
+  /* ── UPLOAD ZONE ── */
+  .upload-zone {
+    background: white; border: 2px dashed var(--cb-border);
+    border-radius: 12px; padding: 48px 32px;
+    text-align: center;
+    transition: all 0.2s;
+  }
+  .upload-zone.dragover {
+    border-color: var(--cb-purple);
+    background: var(--cb-purple-dim);
+  }
+  .upload-icon { font-size: 36px; margin-bottom: 12px; }
+  .upload-title { font-size: 16px; font-weight: 600; color: var(--cb-text); margin-bottom: 6px; }
+  .upload-hint { font-size: 13px; color: var(--cb-text-2); margin-bottom: 20px; }
+  .upload-hint span { color: var(--cb-purple); font-weight: 500; }
+  #file-input { display: none; }
+
+  /* ── FILE SELECTED STATE ── */
+  .file-selected {
+    background: white; border: 1px solid var(--cb-border);
+    border-radius: 12px; padding: 20px 24px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .file-icon-wrap {
+    width: 44px; height: 44px; background: #fef2f2;
+    border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0;
+  }
+  .file-name { font-size: 14px; font-weight: 600; color: var(--cb-text); }
+  .file-size { font-size: 12px; color: var(--cb-text-2); margin-top: 2px; }
+  .file-remove {
+    margin-left: auto; color: var(--cb-text-3); cursor: pointer;
+    font-size: 18px; line-height: 1;
+    background: none; border: none; padding: 4px;
+  }
+  .file-remove:hover { color: var(--cb-red); }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 9px 18px; border-radius: 7px;
+    font-size: 13.5px; font-weight: 600;
+    cursor: pointer; border: none;
+    transition: all 0.15s; font-family: 'DM Sans', sans-serif;
+    text-decoration: none;
+  }
+  .btn-primary {
+    background: var(--cb-purple); color: white;
+  }
+  .btn-primary:hover { background: #5558e8; }
+  .btn-primary:disabled { background: #c7d2fe; cursor: not-allowed; }
+  .btn-secondary {
+    background: white; color: var(--cb-text);
+    border: 1px solid var(--cb-border);
+  }
+  .btn-secondary:hover { background: var(--cb-bg); }
+  .btn-success { background: var(--cb-green); color: white; }
+  .btn-success:hover { background: #059669; }
+  .btn-danger { background: var(--cb-red); color: white; }
+
+  .btn-row { display: flex; gap: 10px; margin-top: 20px; align-items: center; }
+
+  /* ── PROCESSING OVERLAY ── */
+  .processing-card {
+    background: white; border: 1px solid var(--cb-border);
+    border-radius: 12px; padding: 40px 32px;
+    text-align: center;
+  }
+  .spinner {
+    width: 48px; height: 48px; border: 3px solid var(--cb-border);
+    border-top-color: var(--cb-purple);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .processing-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+  .processing-sub { font-size: 13px; color: var(--cb-text-2); }
+  .processing-steps { margin-top: 20px; text-align: left; max-width: 320px; margin-left: auto; margin-right: auto; }
+  .proc-step { display: flex; align-items: center; gap: 10px; padding: 6px 0; font-size: 13px; color: var(--cb-text-2); }
+  .proc-step.done { color: var(--cb-green); }
+  .proc-step.active { color: var(--cb-purple); font-weight: 500; }
+
+  /* ── REVIEW FORM ── */
+  .review-sections { display: flex; flex-direction: column; gap: 20px; }
+  .review-section {
+    background: white; border: 1px solid var(--cb-border);
+    border-radius: 12px; overflow: hidden;
+  }
+  .review-section-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--cb-border);
+    display: flex; align-items: center; gap: 10px;
+    background: #fafafa;
+  }
+  .review-section-icon {
+    width: 28px; height: 28px; border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+  }
+  .icon-blue { background: #eff6ff; }
+  .icon-purple { background: var(--cb-purple-dim); }
+  .icon-green { background: var(--cb-green-dim); }
+  .review-section-title { font-size: 13px; font-weight: 600; color: var(--cb-text); }
+  .review-section-body { padding: 20px; }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-label {
+    font-size: 11.5px; font-weight: 600; color: var(--cb-text-2);
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .confidence-wrap { display: flex; align-items: center; gap: 6px; }
+  .confidence-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .conf-high { background: var(--cb-green); }
+  .conf-med { background: var(--cb-yellow); }
+  .conf-low { background: var(--cb-red); }
+  .confidence-label { font-size: 10px; color: var(--cb-text-3); }
+
+  .form-input {
+    padding: 8px 12px; border-radius: 7px;
+    border: 1px solid var(--cb-border);
+    font-size: 13.5px; font-family: 'DM Sans', sans-serif;
+    color: var(--cb-text); background: white;
+    transition: border-color 0.15s;
+    width: 100%;
+  }
+  .form-input:focus { outline: none; border-color: var(--cb-purple); box-shadow: 0 0 0 3px var(--cb-purple-dim); }
+  .form-input.low-conf { border-color: #fbbf24; background: #fffbeb; }
+  select.form-input { cursor: pointer; }
+
+  /* ── CONFIRMATION ── */
+  .confirm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .confirm-block {
+    background: white; border: 1px solid var(--cb-border);
+    border-radius: 10px; padding: 18px;
+  }
+  .confirm-block-title {
+    font-size: 11px; font-weight: 700; color: var(--cb-text-2);
+    text-transform: uppercase; letter-spacing: 0.8px;
+    margin-bottom: 12px; padding-bottom: 10px;
+    border-bottom: 1px solid var(--cb-border);
+  }
+  .confirm-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; }
+  .confirm-key { font-size: 12.5px; color: var(--cb-text-2); }
+  .confirm-val { font-size: 12.5px; font-weight: 600; color: var(--cb-text); text-align: right; max-width: 60%; }
+
+  .confirm-summary {
+    background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+    border: 1px solid #a7f3d0;
+    border-radius: 10px; padding: 16px 20px;
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .confirm-summary-icon { font-size: 24px; }
+  .confirm-summary-text { font-size: 13px; color: #065f46; line-height: 1.5; }
+  .confirm-summary-text strong { font-weight: 700; }
+
+  /* ── SUCCESS ── */
+  .success-card {
+    background: white; border: 1px solid var(--cb-border);
+    border-radius: 12px; padding: 48px 32px;
+    text-align: center; max-width: 600px; margin: 0 auto;
+  }
+  .success-icon { font-size: 52px; margin-bottom: 16px; }
+  .success-title { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+  .success-sub { font-size: 14px; color: var(--cb-text-2); margin-bottom: 28px; line-height: 1.6; }
+  .success-ids {
+    background: var(--cb-bg); border-radius: 10px;
+    padding: 16px 20px; margin-bottom: 24px; text-align: left;
+  }
+  .success-id-row { display: flex; justify-content: space-between; padding: 5px 0; }
+  .success-id-key { font-size: 12px; color: var(--cb-text-2); }
+  .success-id-val { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--cb-purple); font-weight: 500; }
+
+  /* ── ERROR / ALERT ── */
+  .alert {
+    border-radius: 8px; padding: 12px 16px;
+    font-size: 13px; margin-bottom: 16px;
+    display: flex; align-items: flex-start; gap: 10px;
+  }
+  .alert-error { background: var(--cb-red-dim); border: 1px solid #fca5a5; color: #991b1b; }
+  .alert-warning { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
+  .alert-info { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
+
+  /* ── MISC ── */
+  .hidden { display: none !important; }
+  .tag {
+    display: inline-flex; align-items: center;
+    padding: 2px 8px; border-radius: 4px;
+    font-size: 11px; font-weight: 600;
+  }
+  .tag-purple { background: var(--cb-purple-dim); color: var(--cb-purple); }
+  .tag-green { background: var(--cb-green-dim); color: var(--cb-green); }
+
+  .api-config {
+    background: white; border: 1px solid var(--cb-border);
+    border-radius: 10px; padding: 20px; margin-bottom: 20px;
+  }
+  .api-config-title { font-size: 13px; font-weight: 600; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+  .api-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .divider { height: 1px; background: var(--cb-border); margin: 20px 0; }
+
+  /* dashboard table */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 8px 12px; font-size: 11px; font-weight: 600; color: var(--cb-text-2); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--cb-border); }
+  td { padding: 10px 12px; border-bottom: 1px solid #f3f4f6; color: var(--cb-text); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #f9fafb; }
+
+  .empty-state { text-align: center; padding: 32px; color: var(--cb-text-3); font-size: 13px; }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- ══════════════ SIDEBAR ══════════════ -->
+<aside class="sidebar">
+  <!-- Billing top bar -->
+  <div class="sidebar-billing-bar">
+    <div class="billing-bar-left">
+      <span class="billing-icon">✳</span>
+      <span class="billing-label">Billing</span>
+    </div>
+    <span class="billing-arrow">›</span>
+  </div>
+
+  <!-- Site switcher -->
+  <div class="site-switcher">
+    <div class="site-info">
+      <div class="site-icon">⊙</div>
+      <div>
+        <div class="site-name">girivignesh</div>
+        <div class="site-sub">girivignesh-test.chargebee...</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px">
+      <span class="site-test-badge">Test</span>
+      <span class="site-chevron">›</span>
+    </div>
+  </div>
+
+  <!-- Search -->
+  <div class="sidebar-search">
+    <div class="sidebar-search-inner">
+      <span>🔍</span>
+      <span>Go to</span>
+      <span class="sidebar-search-kbd">⌘K</span>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-item active" onclick="showPage('dashboard')">
+      <span class="nav-icon-img">⌂</span>
+      Home
+    </div>
+    <div class="nav-item" onclick="showPage('dashboard')">
+      <span class="nav-icon-img">👥</span> Customers
+    </div>
+    <div class="nav-item" onclick="showPage('dashboard')">
+      <span class="nav-icon-img">🔄</span> Subscriptions
+    </div>
+    <div class="nav-item" onclick="showPage('dashboard')">
+      <span class="nav-icon-img">🧾</span> Invoices & Credit Notes <span class="nav-chevron">∨</span>
+    </div>
+    <div class="nav-item" onclick="showPage('dashboard')">
+      <span class="nav-icon-img">📋</span> Quotes
+    </div>
+    <div class="nav-item" onclick="showPage('dashboard')">
+      <span class="nav-icon-img">📦</span> Product Catalog <span class="nav-chevron">∨</span>
+    </div>
+    <div class="nav-item" onclick="showPage('dashboard')">
+      <span class="nav-icon-img">⊙</span> Usages <span class="new-pill" style="margin-left:4px">NEW</span>
+    </div>
+    <div class="nav-item" onclick="showPage('dashboard')">
+      <span class="nav-icon-img">♛</span> Entitlements <span class="nav-chevron">∨</span>
+    </div>
+    <div class="nav-item" onclick="showPage('dashboard')">
+      <span class="nav-icon-img">📄</span> Logs <span class="nav-chevron">∨</span>
+    </div>
+    <div class="nav-item" onclick="showPage('dashboard')">
+      <span class="nav-icon-img">⊗</span> RevenueStory <span class="nav-chevron">∨</span>
+    </div>
+    <div class="nav-item" onclick="showPage('dashboard')">
+      <span class="nav-icon-img">📊</span> Classic Reports
+    </div>
+    <div class="nav-divider"></div>
+    <div class="nav-item highlight" onclick="showPage('upload')" id="upload-nav">
+      <span class="nav-icon-img">⬆</span> Upload Contract <span class="new-pill" style="margin-left:auto">NEW</span>
+    </div>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <div class="nav-item" onclick="showPage('dashboard')">
+      <span class="nav-icon-img">🔁</span> Repopulate Data
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon-img">🚀</span> What's new <span style="margin-left:auto;font-size:11px">↗</span>
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon-img">?</span> Need Help? <span style="margin-left:auto;color:#94a3b8">•••</span>
+    </div>
+    <div class="nav-item user-item">
+      <div class="user-avatar">G</div>
+      <div class="user-info">
+        <div class="user-name">Giri Vignesh</div>
+        <div class="user-email">giri.f264078@greatleakes.edu...</div>
+      </div>
+      <span style="margin-left:auto;color:#94a3b8;font-size:12px">•••</span>
+    </div>
+  </div>
+</aside>
+
+<!-- ══════════════ MAIN ══════════════ -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-search">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#9ca3af" stroke-width="2"><circle cx="6" cy="6" r="4"/><path d="M10 10l4 4"/></svg>
+      <span style="color:#9ca3af;font-size:13px">Go to</span>
+      <span style="color:#d1d5db;font-size:11px;margin-left:auto;background:#f3f4f6;padding:1px 6px;border-radius:3px">⌘K</span>
+    </div>
+    <div class="topbar-spacer"></div>
+    <div class="topbar-actions">
+      <div class="topbar-icon">🔔</div>
+      <div class="topbar-icon">⚙️</div>
+      <div class="topbar-icon" style="font-size:11px">🧪 Test</div>
+    </div>
+  </div>
+
+  <!-- ══ DASHBOARD PAGE ══ -->
+  <div class="page active" id="page-dashboard">
+
+    <!-- Yellow test site bar -->
+    <div class="test-bar">
+      🔧 Test site — Safe to simulate and experiment <span style="color:#6366f1;cursor:pointer">ⓘ</span>
+    </div>
+
+    <!-- Onboarding banner -->
+    <div class="cb-section">
+      <div class="onboard-banner">
+        <div class="onboard-left">
+          <span class="onboard-days">10 days left</span>
+          <span class="onboard-text">Get dedicated onboarding assistance.</span>
+          <a href="#" class="onboard-link">Chat with sales</a>
+        </div>
+        <button class="btn-talk">Talk to a Product Expert</button>
+      </div>
+
+      <!-- Learn more section -->
+      <div class="learn-title">Learn more about Chargebee's capabilities</div>
+      <div class="learn-cards">
+        <div class="learn-card"><div class="learn-thumb" style="background:linear-gradient(160deg,#0f2744 0%,#1a1035 60%,#3d1a1a 100%)"><div class="learn-card-title">Chargebee Overview</div><div class="play-btn">▶</div><div class="learn-duration">01:57</div></div></div>
+        <div class="learn-card"><div class="learn-thumb" style="background:linear-gradient(160deg,#0f2744 0%,#1a1035 60%,#3d1a1a 100%)"><div class="learn-card-title">Launch your AI product</div><div class="play-btn">▶</div><div class="learn-duration">02:25</div></div></div>
+        <div class="learn-card"><div class="learn-thumb" style="background:linear-gradient(160deg,#0f2744 0%,#1a1035 60%,#3d1a1a 100%)"><div class="learn-card-title">Launch Usage-Based pricing</div><div class="play-btn">▶</div><div class="learn-duration">02:13</div></div></div>
+        <div class="learn-card"><div class="learn-thumb" style="background:linear-gradient(160deg,#0f2744 0%,#1a1035 60%,#3d1a1a 100%)"><div class="learn-card-title">Iterate Pricing Faster</div><div class="play-btn">▶</div><div class="learn-duration">01:32</div></div></div>
+        <div class="learn-card"><div class="learn-thumb" style="background:linear-gradient(160deg,#0f2744 0%,#1a1035 60%,#3d1a1a 100%)"><div class="learn-card-title">Create a Product Family</div><div class="play-btn">▶</div><div class="learn-duration">00:52</div></div></div>
+      </div>
+    </div>
+
+    <!-- Sample data notice -->
+    <div class="sample-notice">
+      🔧 You're seeing sample data on the Test Site. Switch to the Live Site for real insights.
+    </div>
+
+    <!-- KPI metrics row -->
+    <div class="kpi-row">
+      <div class="kpi-card"><div class="kpi-label">Total MRR <span class="kpi-info">ⓘ</span></div><div class="kpi-value">₹84,920</div></div>
+      <div class="kpi-card"><div class="kpi-label">Total Active<br>Subscriptions <span class="kpi-info">ⓘ</span></div><div class="kpi-value">1,702</div></div>
+      <div class="kpi-card"><div class="kpi-label">Net Billing <span class="kpi-info">ⓘ</span></div><div class="kpi-value">₹198,805</div></div>
+      <div class="kpi-card"><div class="kpi-label">Net Payments <span class="kpi-info">ⓘ</span></div><div class="kpi-value">₹194,800</div></div>
+      <div class="kpi-card"><div class="kpi-label">Unpaid Invoices <span class="kpi-info">ⓘ</span></div><div class="kpi-value">80 <span style="font-size:13px;color:#64748b;font-weight:400">₹2,340</span></div></div>
+    </div>
+
+    <!-- Period tabs -->
+    <div class="chart-period-row">
+      <button class="chart-tab active" onclick="setTab(this)">Daily</button>
+      <button class="chart-tab" onclick="setTab(this)">3 months</button>
+      <button class="chart-tab" onclick="setTab(this)">6 months</button>
+      <button class="chart-tab" onclick="setTab(this)">12 months</button>
+      <button class="chart-tab" onclick="setTab(this)">⊞ All (INR) ▾</button>
+    </div>
+
+    <!-- Charts grid -->
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-meta"><div class="chart-title">Total Billing</div><div class="chart-icons"><span>ⓘ</span><span>···</span></div></div>
+        <div class="chart-val">₹9.14K <span class="chart-apr">Apr ₹80.90K</span></div>
+        <div style="height:160px;position:relative"><canvas id="c-billing"></canvas></div>
+        <div class="chart-legend"><span class="legend-dot" style="background:#93c5fd"></span>Total Billing</div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-meta"><div class="chart-title">Total New Billing</div><div class="chart-icons"><span>ⓘ</span><span>···</span></div></div>
+        <div class="chart-val">₹396 <span class="chart-apr">Apr ₹8.16K</span></div>
+        <div style="height:160px;position:relative"><canvas id="c-new-billing"></canvas></div>
+        <div class="chart-legend"><span class="legend-dot" style="background:#93c5fd"></span>Total New Billing</div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-meta"><div class="chart-title">Total Payments</div><div class="chart-icons"><span>ⓘ</span><span>···</span></div></div>
+        <div class="chart-val">₹7.14K <span class="chart-apr">Apr ₹78.90K</span></div>
+        <div style="height:160px;position:relative"><canvas id="c-payments"></canvas></div>
+        <div class="chart-legend"><span class="legend-dot" style="background:#93c5fd"></span>Total Payments</div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-meta"><div class="chart-title">Total Refunds</div><div class="chart-icons"><span>ⓘ</span></div></div>
+        <div class="chart-val">₹53 <span class="chart-apr">Apr ₹672</span></div>
+        <div style="height:160px;position:relative"><canvas id="c-refunds"></canvas></div>
+        <div class="chart-legend"><span class="legend-dot" style="background:#93c5fd"></span>Total Refunds</div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-meta"><div class="chart-title">Total MRR</div><div class="chart-icons"><span>ⓘ</span><span>···</span></div></div>
+        <div class="chart-val">₹84.92K <span class="chart-apr">Apr ₹84.82K</span></div>
+        <div style="height:160px;position:relative"><canvas id="c-mrr"></canvas></div>
+        <div class="chart-legend"><span class="legend-dot" style="background:#93c5fd"></span>Total MRR</div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-meta"><div class="chart-title">Total CMRR</div><div class="chart-icons"><span>ⓘ</span><span>···</span></div></div>
+        <div class="chart-val">₹85.49K <span class="chart-apr">Apr ₹85.39K</span></div>
+        <div style="height:160px;position:relative"><canvas id="c-cmrr"></canvas></div>
+        <div class="chart-legend"><span class="legend-dot" style="background:#93c5fd"></span>Total CMRR</div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-meta"><div class="chart-title">Total Signups</div><div class="chart-icons"><span>ⓘ</span><span>···</span></div></div>
+        <div class="chart-val">153 <span class="chart-apr">Apr 1,283</span></div>
+        <div style="height:160px;position:relative"><canvas id="c-signups"></canvas></div>
+        <div class="chart-legend"><span class="legend-dot" style="background:#93c5fd"></span>Total Signups</div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-meta"><div class="chart-title">Total Activations</div><div class="chart-icons"><span>ⓘ</span></div></div>
+        <div class="chart-val">19 <span class="chart-apr">Apr 174</span></div>
+        <div style="height:160px;position:relative"><canvas id="c-activations"></canvas></div>
+        <div class="chart-legend"><span class="legend-dot" style="background:#93c5fd"></span>Total Activations</div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-meta"><div class="chart-title">Total Subscription Churn Rate</div><div class="chart-icons"><span>ⓘ</span></div></div>
+        <div class="chart-val">0.55 % <span class="chart-apr">Apr 4.45 %</span></div>
+        <div style="height:160px;position:relative"><canvas id="c-churn"></canvas></div>
+        <div class="chart-legend"><span class="legend-dot" style="background:#93c5fd"></span>Total Subscription Churn Rate</div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-meta"><div class="chart-title">Total Credit Notes Amount</div><div class="chart-icons"><span>ⓘ</span></div></div>
+        <div class="chart-val">₹53 <span class="chart-apr">Apr ₹868</span></div>
+        <div style="height:160px;position:relative"><canvas id="c-credits"></canvas></div>
+        <div class="chart-legend"><span class="legend-dot" style="background:#93c5fd"></span>Total Credit Notes Amount</div>
+      </div>
+    </div>
+
+    <div style="padding:16px 0;text-align:left">
+      <a href="#" style="font-size:12px;color:#6366f1;margin-right:12px">Privacy</a>
+      <a href="#" style="font-size:12px;color:#6366f1">Terms</a>
+    </div>
+
+  </div>
+
+  <!-- ══ UPLOAD PAGE ══ -->
+  <div class="page" id="page-upload">
+    <div class="upload-page-wrap">
+      <div class="page-heading">Contract Intelligence</div>
+      <div class="page-sub">Upload a signed contract PDF. Claude AI will extract subscription details and create records in Chargebee automatically.</div>
+
+      <!-- STEPPER -->
+      <div class="stepper" id="stepper">
+        <div class="step active" id="step-1">
+          <div class="step-num">1</div>
+          <div class="step-label">Upload</div>
+        </div>
+        <div class="step-connector" id="conn-1"></div>
+        <div class="step" id="step-2">
+          <div class="step-num">2</div>
+          <div class="step-label">AI Extraction</div>
+        </div>
+        <div class="step-connector" id="conn-2"></div>
+        <div class="step" id="step-3">
+          <div class="step-num">3</div>
+          <div class="step-label">Review</div>
+        </div>
+        <div class="step-connector" id="conn-3"></div>
+        <div class="step" id="step-4">
+          <div class="step-num">4</div>
+          <div class="step-label">Confirm</div>
+        </div>
+        <div class="step-connector" id="conn-4"></div>
+        <div class="step" id="step-5">
+          <div class="step-num">5</div>
+          <div class="step-label">Created</div>
+        </div>
+      </div>
+
+      <!-- API CONFIG -->
+      <div class="api-config" id="api-config-section">
+        <div class="api-config-title">⚙️ API Configuration <span class="tag tag-purple">Required</span></div>
+        <div class="api-grid">
+          <div class="form-group">
+            <label class="form-label">Chargebee Site Name</label>
+            <input class="form-input" id="cb-site" placeholder="girivignesh-test" value="girivignesh-test">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Chargebee API Key</label>
+            <input class="form-input" id="cb-key" type="password" placeholder="test_xxxxxxxxxxxx" value="test_UwfNYZNdkseBeC0RQcd1ykGM4N8b3mgyN">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Gemini API Key</label>
+            <input class="form-input" id="anthropic-key" type="password" placeholder="AIza...">
+          </div>
+        </div>
+        <div style="margin-top:10px;font-size:12px;color:var(--cb-text-2)">
+          💡 This app runs via a local Node.js server. Run <code style="background:#f3f4f6;padding:2px 6px;border-radius:4px">node server.js</code> in your terminal first, then open <strong>http://localhost:3000</strong>. No external AI API key required.
+        </div>
+      </div>
+
+      <!-- STEP 1: UPLOAD -->
+      <input type="file" accept=".pdf" id="file-input" style="display:none" onchange="handleFileSelect(event)">
+      <div id="panel-upload">
+        <div id="upload-zone-wrap">
+          <div class="upload-zone" id="upload-zone">
+            <div class="upload-icon">📄</div>
+            <div class="upload-title">Drop your signed contract PDF here</div>
+            <div class="upload-hint" style="margin-bottom:16px">or click the button below to browse — PDF files only</div>
+            <button type="button" class="btn btn-secondary" onclick="document.getElementById('file-input').click()">📂 Browse PDF File</button>
+          </div>
+        </div>
+
+        <div id="file-selected-wrap" class="hidden">
+          <div class="file-selected">
+            <div class="file-icon-wrap">📋</div>
+            <div>
+              <div class="file-name" id="file-name-display">contract.pdf</div>
+              <div class="file-size" id="file-size-display">0 KB</div>
+            </div>
+            <button class="file-remove" onclick="removeFile()">✕</button>
+          </div>
+        </div>
+
+        <div id="upload-error" class="alert alert-error hidden">
+          ⚠️ <span id="upload-error-msg">Something went wrong.</span>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-primary" id="extract-btn" onclick="startExtraction()" disabled>
+            🤖 Extract with AI
+          </button>
+          <span style="font-size:12px;color:var(--cb-text-3)">Claude AI will read and parse your contract</span>
+        </div>
+      </div>
+
+      <!-- STEP 2: PROCESSING -->
+      <div id="panel-processing" class="hidden">
+        <div class="processing-card">
+          <div class="spinner"></div>
+          <div class="processing-title">Claude is reading your contract...</div>
+          <div class="processing-sub">Extracting subscription and billing details</div>
+          <div class="processing-steps" id="proc-steps">
+            <div class="proc-step active" id="proc-1">⏳ Parsing PDF document...</div>
+            <div class="proc-step" id="proc-2">🔍 Identifying customer details...</div>
+            <div class="proc-step" id="proc-3">💳 Extracting billing configuration...</div>
+            <div class="proc-step" id="proc-4">📋 Structuring subscription data...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 3: REVIEW FORM -->
+      <div id="panel-review" class="hidden">
+        <div class="alert alert-info">
+          ℹ️ Claude has extracted the following details from your contract. Review and edit any fields before proceeding.
+        </div>
+
+        <div class="review-sections">
+
+          <!-- Customer -->
+          <div class="review-section">
+            <div class="review-section-header">
+              <div class="review-section-icon icon-blue">👤</div>
+              <div class="review-section-title">Customer Information</div>
+            </div>
+            <div class="review-section-body">
+              <div class="form-grid">
+                <div class="form-group">
+                  <div class="confidence-wrap">
+                    <div class="form-label">First Name</div>
+                    <div class="confidence-dot conf-high" title="High confidence"></div>
+                    <div class="confidence-label">High</div>
+                  </div>
+                  <input class="form-input" id="r-first-name" placeholder="First Name">
+                </div>
+                <div class="form-group">
+                  <div class="confidence-wrap">
+                    <div class="form-label">Last Name</div>
+                    <div class="confidence-dot conf-high"></div>
+                    <div class="confidence-label">High</div>
+                  </div>
+                  <input class="form-input" id="r-last-name" placeholder="Last Name">
+                </div>
+                <div class="form-group">
+                  <div class="confidence-wrap">
+                    <div class="form-label">Email</div>
+                    <div class="confidence-dot" id="conf-email"></div>
+                    <div class="confidence-label" id="conf-email-label"></div>
+                  </div>
+                  <input class="form-input" id="r-email" placeholder="email@company.com">
+                </div>
+                <div class="form-group">
+                  <div class="confidence-wrap">
+                    <div class="form-label">Phone</div>
+                    <div class="confidence-dot conf-med"></div>
+                    <div class="confidence-label">Medium</div>
+                  </div>
+                  <input class="form-input" id="r-phone" placeholder="+91 XXXXX XXXXX">
+                </div>
+                <div class="form-group full">
+                  <div class="confidence-wrap">
+                    <div class="form-label">Company Name</div>
+                    <div class="confidence-dot conf-high"></div>
+                    <div class="confidence-label">High</div>
+                  </div>
+                  <input class="form-input" id="r-company" placeholder="Company Name">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Subscription -->
+          <div class="review-section">
+            <div class="review-section-header">
+              <div class="review-section-icon icon-purple">🔄</div>
+              <div class="review-section-title">Subscription Details</div>
+            </div>
+            <div class="review-section-body">
+              <div class="form-grid three">
+                <div class="form-group">
+                  <div class="confidence-wrap">
+                    <div class="form-label">Plan ID</div>
+                    <div class="confidence-dot conf-high"></div>
+                    <div class="confidence-label">High</div>
+                  </div>
+                  <select class="form-input" id="r-plan">
+                    <option value="pro-monthly">Pro Monthly</option>
+                    <option value="pro-yearly">Pro Yearly</option>
+                    <option value="business-monthly">Business Monthly</option>
+                    <option value="business-yearly">Business Yearly</option>
+                    <option value="starter-monthly">Starter Monthly</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <div class="confidence-wrap">
+                    <div class="form-label">Quantity / Seats</div>
+                    <div class="confidence-dot conf-high"></div>
+                    <div class="confidence-label">High</div>
+                  </div>
+                  <input class="form-input" id="r-quantity" type="number" min="1" placeholder="1">
+                </div>
+                <div class="form-group">
+                  <div class="confidence-wrap">
+                    <div class="form-label">Billing Period</div>
+                    <div class="confidence-dot conf-high"></div>
+                    <div class="confidence-label">High</div>
+                  </div>
+                  <select class="form-input" id="r-billing-period">
+                    <option value="month">Monthly</option>
+                    <option value="year">Annual</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <div class="confidence-wrap">
+                    <div class="form-label">Start Date</div>
+                    <div class="confidence-dot" id="conf-start"></div>
+                    <div class="confidence-label" id="conf-start-label"></div>
+                  </div>
+                  <input class="form-input" id="r-start-date" type="date">
+                </div>
+                <div class="form-group">
+                  <div class="confidence-wrap">
+                    <div class="form-label">Unit Price (₹)</div>
+                    <div class="confidence-dot conf-high"></div>
+                    <div class="confidence-label">High</div>
+                  </div>
+                  <input class="form-input" id="r-price" type="number" min="0" placeholder="0">
+                </div>
+                <div class="form-group">
+                  <div class="confidence-wrap">
+                    <div class="form-label">Currency</div>
+                    <div class="confidence-dot conf-high"></div>
+                    <div class="confidence-label">High</div>
+                  </div>
+                  <select class="form-input" id="r-currency">
+                    <option value="INR">INR</option>
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                    <option value="GBP">GBP</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Billing -->
+          <div class="review-section">
+            <div class="review-section-header">
+              <div class="review-section-icon icon-green">💳</div>
+              <div class="review-section-title">Billing & Contract Terms</div>
+            </div>
+            <div class="review-section-body">
+              <div class="form-grid">
+                <div class="form-group">
+                  <div class="confidence-wrap">
+                    <div class="form-label">Discount (%)</div>
+                    <div class="confidence-dot" id="conf-discount"></div>
+                    <div class="confidence-label" id="conf-discount-label"></div>
+                  </div>
+                  <input class="form-input" id="r-discount" type="number" min="0" max="100" placeholder="0">
+                </div>
+                <div class="form-group">
+                  <div class="confidence-wrap">
+                    <div class="form-label">Contract Duration</div>
+                    <div class="confidence-dot conf-med"></div>
+                    <div class="confidence-label">Medium</div>
+                  </div>
+                  <select class="form-input" id="r-duration">
+                    <option value="">Month-to-month</option>
+                    <option value="6">6 months</option>
+                    <option value="12">12 months</option>
+                    <option value="24">24 months</option>
+                    <option value="36">36 months</option>
+                  </select>
+                </div>
+                <div class="form-group full">
+                  <div class="confidence-wrap">
+                    <div class="form-label">Special Terms / Notes</div>
+                    <div class="confidence-dot" id="conf-notes"></div>
+                    <div class="confidence-label" id="conf-notes-label"></div>
+                  </div>
+                  <input class="form-input" id="r-notes" placeholder="e.g. 10% discount from month 6, ramp pricing, SLA terms...">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="review-error" class="alert alert-error hidden" style="margin-top:16px">
+          ⚠️ <span id="review-error-msg">Please fill all required fields.</span>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="proceedToConfirm()">Continue →</button>
+          <button class="btn btn-secondary" onclick="goBack('upload')">← Re-upload</button>
+        </div>
+      </div>
+
+      <!-- STEP 4: CONFIRMATION -->
+      <div id="panel-confirm" class="hidden">
+        <div class="confirm-summary">
+          <div class="confirm-summary-icon">✅</div>
+          <div class="confirm-summary-text">
+            Please review all details below before creating records in Chargebee.<br>
+            <strong>This will create a customer and subscription in your test environment.</strong>
+          </div>
+        </div>
+
+        <div class="confirm-grid" id="confirm-grid">
+          <!-- filled by JS -->
+        </div>
+
+        <div id="confirm-error" class="alert alert-error hidden" style="margin-top:16px">
+          ⚠️ <span id="confirm-error-msg">Failed to create records.</span>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-success" id="approve-btn" onclick="approveAndCreate()">
+            ✅ Approve & Create in Chargebee
+          </button>
+          <button class="btn btn-secondary" onclick="goBack('review')">← Edit Details</button>
+        </div>
+      </div>
+
+      <!-- STEP 5: SUCCESS -->
+      <div id="panel-success" class="hidden">
+        <div class="success-card">
+          <div class="success-icon">🎉</div>
+          <div class="success-title">Records Created Successfully!</div>
+          <div class="success-sub">
+            Customer and subscription have been created in your Chargebee test environment.<br>
+            You can view them in the Chargebee dashboard.
+          </div>
+          <div class="success-ids" id="success-ids">
+            <!-- filled by JS -->
+          </div>
+          <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+            <button class="btn btn-primary" onclick="resetAndUploadAnother()">
+              📄 Upload Another Contract
+            </button>
+            <a class="btn btn-secondary" href="https://girivignesh-test.chargebee.com/customers" target="_blank">
+              🔗 View in Chargebee
+            </a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════
+let currentFile = null;
+let extractedData = null;
+let createdRecords = [];
+let contractsProcessed = 0;
+
+// ══════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (page === 'upload') {
+    const uploadNav = document.getElementById('upload-nav');
+    if (uploadNav) uploadNav.classList.add('active');
+  } else {
+    // Mark Home as active
+    const homeNav = document.querySelector('.sidebar-nav .nav-item:first-child');
+    if (homeNav) homeNav.classList.add('active');
+    // Init charts
+    setTimeout(initCharts, 100);
+  }
+}
+
+// ══════════════════════════════════════════
+// DRAG & DROP
+// ══════════════════════════════════════════
+const uploadZone = document.getElementById('upload-zone');
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault(); uploadZone.classList.remove('dragover');
+  const f = e.dataTransfer.files[0];
+  if (f && f.type === 'application/pdf') setFile(f);
+  else showUploadError('Please upload a PDF file only.');
+});
+
+function handleFileSelect(e) {
+  const f = e.target.files[0];
+  if (f) setFile(f);
+}
+
+function setFile(f) {
+  currentFile = f;
+  hideUploadError();
+  document.getElementById('upload-zone-wrap').classList.add('hidden');
+  document.getElementById('file-selected-wrap').classList.remove('hidden');
+  document.getElementById('file-name-display').textContent = f.name;
+  document.getElementById('file-size-display').textContent = (f.size / 1024).toFixed(1) + ' KB';
+  document.getElementById('extract-btn').disabled = false;
+}
+
+function removeFile() {
+  currentFile = null;
+  document.getElementById('file-input').value = '';
+  document.getElementById('upload-zone-wrap').classList.remove('hidden');
+  document.getElementById('file-selected-wrap').classList.add('hidden');
+  document.getElementById('extract-btn').disabled = true;
+}
+
+function showUploadError(msg) {
+  document.getElementById('upload-error-msg').textContent = msg;
+  document.getElementById('upload-error').classList.remove('hidden');
+}
+function hideUploadError() { document.getElementById('upload-error').classList.add('hidden'); }
+
+// ══════════════════════════════════════════
+// STEP 2: AI EXTRACTION
+// ══════════════════════════════════════════
+async function startExtraction() {
+  if (!currentFile) return;
+
+  const cbSite = document.getElementById('cb-site').value.trim();
+  const cbKey = document.getElementById('cb-key').value.trim();
+  if (!cbSite || !cbKey) {
+    showUploadError('Please enter your Chargebee site name and API key.');
+    return;
+  }
+
+  hideUploadError();
+  setStep(2);
+  showPanel('processing');
+
+  // Animate processing steps
+  const steps = ['proc-1','proc-2','proc-3','proc-4'];
+  const labels = [
+    '✅ PDF document parsed.',
+    '✅ Customer details identified.',
+    '✅ Billing configuration extracted.',
+    '✅ Subscription data structured.'
+  ];
+  for (let i = 0; i < steps.length; i++) {
+    await delay(800);
+    document.getElementById(steps[i]).className = 'proc-step done';
+    document.getElementById(steps[i]).textContent = labels[i];
+    if (i + 1 < steps.length) document.getElementById(steps[i+1]).className = 'proc-step active';
+  }
+
+  // Convert PDF to base64
+  let base64PDF;
+  try {
+    base64PDF = await fileToBase64(currentFile);
+  } catch(e) {
+    showExtractionError('Failed to read PDF file: ' + e.message);
+    return;
+  }
+
+  // Call Claude API
+  try {
+    const serverUrl = 'http://localhost:3000';
+
+    const response = await fetch(serverUrl + '/api/extract', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pdfBase64: base64PDF })
+    });
+
+    const data = await response.json();
+    if (!response.ok || data.error) throw new Error(data.error && data.error.message ? data.error.message : (data.error || 'Extraction failed'));
+
+    const rawText = data.content.map(b => b.text || '').join('');
+    let parsed;
+    try {
+      const clean = rawText.replace(/```json|```/g, '').trim();
+      parsed = JSON.parse(clean);
+    } catch(e) {
+      throw new Error('Could not parse AI response. Please try again.');
+    }
+
+    extractedData = parsed;
+    populateReviewForm(parsed);
+    setStep(3);
+    showPanel('review');
+
+  } catch(e) {
+    showExtractionError(e.message || 'AI extraction failed. Please try again.');
+  }
+}
+
+function showExtractionError(msg) {
+  setStep(1);
+  showPanel('upload');
+  showUploadError('AI Extraction failed: ' + msg);
+}
+
+function populateReviewForm(data) {
+  const c = data.customer || {};
+  const s = data.subscription || {};
+  const b = data.billing || {};
+  const conf = data.confidence || {};
+
+  document.getElementById('r-first-name').value = c.first_name || '';
+  document.getElementById('r-last-name').value = c.last_name || '';
+  document.getElementById('r-email').value = c.email || '';
+  document.getElementById('r-phone').value = c.phone || '';
+  document.getElementById('r-company').value = c.company || '';
+
+  document.getElementById('r-plan').value = s.plan || 'pro-monthly';
+  document.getElementById('r-quantity').value = s.quantity || 1;
+  document.getElementById('r-billing-period').value = s.billing_period || 'month';
+  document.getElementById('r-start-date').value = s.start_date || new Date().toISOString().split('T')[0];
+  document.getElementById('r-price').value = s.unit_price || 0;
+  document.getElementById('r-currency').value = s.currency || 'INR';
+
+  document.getElementById('r-discount').value = b.discount_percent || 0;
+  document.getElementById('r-duration').value = b.contract_duration_months || '';
+  document.getElementById('r-notes').value = b.notes || '';
+
+  // Confidence indicators
+  setConfidence('conf-email', 'conf-email-label', conf.email || 'high');
+  setConfidence('conf-start', 'conf-start-label', conf.start_date || 'medium');
+  setConfidence('conf-discount', 'conf-discount-label', conf.discount || 'medium');
+  setConfidence('conf-notes', 'conf-notes-label', conf.notes || 'low');
+
+  // Highlight low confidence fields
+  if (conf.email === 'low') document.getElementById('r-email').classList.add('low-conf');
+  if (conf.start_date === 'low') document.getElementById('r-start-date').classList.add('low-conf');
+}
+
+function setConfidence(dotId, labelId, level) {
+  const dot = document.getElementById(dotId);
+  const label = document.getElementById(labelId);
+  if (!dot || !label) return;
+  dot.className = 'confidence-dot ' + (level === 'high' ? 'conf-high' : level === 'medium' ? 'conf-med' : 'conf-low');
+  label.textContent = level.charAt(0).toUpperCase() + level.slice(1);
+}
+
+// ══════════════════════════════════════════
+// STEP 4: CONFIRMATION
+// ══════════════════════════════════════════
+function proceedToConfirm() {
+  // Validate required fields
+  const email = document.getElementById('r-email').value.trim();
+  const firstName = document.getElementById('r-first-name').value.trim();
+  const company = document.getElementById('r-company').value.trim();
+  const price = document.getElementById('r-price').value;
+
+  if (!firstName || !email || !company) {
+    document.getElementById('review-error-msg').textContent = 'First name, email and company name are required.';
+    document.getElementById('review-error').classList.remove('hidden');
+    return;
+  }
+  if (!email.includes('@')) {
+    document.getElementById('review-error-msg').textContent = 'Please enter a valid email address.';
+    document.getElementById('review-error').classList.remove('hidden');
+    return;
+  }
+  document.getElementById('review-error').classList.add('hidden');
+
+  // Build confirm grid
+  const qty = parseInt(document.getElementById('r-quantity').value) || 1;
+  const unitPrice = parseFloat(price) || 0;
+  const discount = parseFloat(document.getElementById('r-discount').value) || 0;
+  const totalMonthly = (unitPrice * qty * (1 - discount/100)).toFixed(2);
+  const currency = document.getElementById('r-currency').value;
+
+  const confirmData = {
+    'Customer Details': {
+      'Name': firstName + ' ' + document.getElementById('r-last-name').value,
+      'Email': email,
+      'Phone': document.getElementById('r-phone').value || '—',
+      'Company': company
+    },
+    'Subscription': {
+      'Plan': document.getElementById('r-plan').value,
+      'Seats / Quantity': qty,
+      'Billing Period': document.getElementById('r-billing-period').value === 'month' ? 'Monthly' : 'Annual',
+      'Start Date': document.getElementById('r-start-date').value
+    },
+    'Pricing': {
+      'Unit Price': currency + ' ' + unitPrice.toFixed(2),
+      'Discount': discount + '%',
+      'Total Monthly': currency + ' ' + totalMonthly,
+      'Contract Duration': document.getElementById('r-duration').value ? document.getElementById('r-duration').value + ' months' : 'Month-to-month'
+    },
+    'Notes': {
+      'Special Terms': document.getElementById('r-notes').value || 'None'
+    }
+  };
+
+  const grid = document.getElementById('confirm-grid');
+  grid.innerHTML = '';
+  for (const [section, fields] of Object.entries(confirmData)) {
+    const block = document.createElement('div');
+    block.className = 'confirm-block';
+    block.innerHTML = `<div class="confirm-block-title">${section}</div>` +
+      Object.entries(fields).map(([k,v]) =>
+        `<div class="confirm-row"><span class="confirm-key">${k}</span><span class="confirm-val">${v}</span></div>`
+      ).join('');
+    grid.appendChild(block);
+  }
+
+  setStep(4);
+  showPanel('confirm');
+}
+
+// ══════════════════════════════════════════
+// STEP 5: CREATE IN CHARGEBEE
+// ══════════════════════════════════════════
+async function approveAndCreate() {
+  const btn = document.getElementById('approve-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Creating records...';
+  document.getElementById('confirm-error').classList.add('hidden');
+
+  const cbSite = document.getElementById('cb-site').value.trim();
+  const cbKey = document.getElementById('cb-key').value.trim();
+
+  const firstName = document.getElementById('r-first-name').value.trim();
+  const lastName = document.getElementById('r-last-name').value.trim();
+  const email = document.getElementById('r-email').value.trim();
+  const phone = document.getElementById('r-phone').value.trim();
+  const company = document.getElementById('r-company').value.trim();
+  const plan = document.getElementById('r-plan').value;
+  const quantity = parseInt(document.getElementById('r-quantity').value) || 1;
+  const billingPeriod = document.getElementById('r-billing-period').value;
+  const unitPrice = Math.round(parseFloat(document.getElementById('r-price').value || 0) * 100);
+  const currency = document.getElementById('r-currency').value;
+  const startDateRaw = document.getElementById('r-start-date').value;
+  const startTimestamp = startDateRaw ? Math.floor(new Date(startDateRaw).getTime() / 1000) : Math.floor(Date.now() / 1000);
+
+  const serverUrl2 = 'http://localhost:3000';
+
+  try {
+    // 1) Create Customer via local proxy server
+    let custParts = [
+      'first_name=' + encodeURIComponent(firstName),
+      'last_name=' + encodeURIComponent(lastName),
+      'email=' + encodeURIComponent(email)
+    ];
+    if (phone) custParts.push('phone=' + encodeURIComponent(phone));
+    if (company) custParts.push('company=' + encodeURIComponent(company));
+
+    const custResp = await fetch(serverUrl2 + '/api/chargebee', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cbSite, cbKey, endpoint: 'customers', formData: custParts.join('&') })
+    });
+
+    const custData = await custResp.json();
+    if (!custResp.ok) throw new Error(custData.message || 'Failed to create customer. Check API key and site name.');
+
+    const customerId = custData.customer.id;
+
+    // 2) Create Subscription via local proxy server
+    const subFormData = 'subscription[plan_id]=' + encodeURIComponent(plan)
+      + '&subscription[plan_quantity]=' + encodeURIComponent(quantity)
+      + '&subscription[start_date]=' + encodeURIComponent(startTimestamp);
+
+    // Product Catalog 2.0 — create item price first, then subscription
+    const itemPriceId = plan + '-USD-Monthly';
+    const itemFamilyFormData = 'id=contract-intelligence&name=Contract+Intelligence';
+    await fetch(serverUrl2 + '/api/chargebee', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cbSite, cbKey, endpoint: 'item_families', formData: itemFamilyFormData })
+    });
+
+    const itemFormData = 'id=' + encodeURIComponent(plan) + '&name=' + encodeURIComponent(plan) + '&type=plan&item_family_id=contract-intelligence';
+    await fetch(serverUrl2 + '/api/chargebee', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cbSite, cbKey, endpoint: 'items', formData: itemFormData })
+    });
+
+    const ipFormData = 'id=' + encodeURIComponent(itemPriceId)
+      + '&name=' + encodeURIComponent(plan)
+      + '&item_id=' + encodeURIComponent(plan)
+      + '&price=' + encodeURIComponent(Math.round(unitPrice * 100))
+      + '&currency_code=' + encodeURIComponent(currency)
+      + '&period=1&period_unit=month&pricing_model=flat_fee';
+    await fetch(serverUrl2 + '/api/chargebee', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cbSite, cbKey, endpoint: 'item_prices', formData: ipFormData })
+    });
+
+    // Now create subscription using PC2 endpoint
+    // Don't send start_date if it's in the past — Chargebee rejects it
+    const now = Math.floor(Date.now() / 1000);
+    const effectiveStart = startTimestamp > now ? startTimestamp : now;
+    const subV2FormData = 'subscription_items[item_price_id][0]=' + encodeURIComponent(itemPriceId)
+      + '&subscription_items[quantity][0]=' + encodeURIComponent(quantity)
+      + '&subscription_items[unit_price][0]=' + encodeURIComponent(Math.round(unitPrice * 100))
+      + '&payment_intent[gateway_account_id]=offline'
+      + '&auto_collection=off';
+
+    const subResp = await fetch(serverUrl2 + '/api/chargebee', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cbSite, cbKey, endpoint: 'customers/' + customerId + '/subscription_for_items', formData: subV2FormData })
+    });
+
+    const subData = await subResp.json();
+    if (!subResp.ok) throw new Error(subData.message || 'Subscription creation failed: ' + JSON.stringify(subData));
+
+    const subscriptionId = subData.subscription.id;
+
+    // Success!
+    const record = {
+      customer: firstName + ' ' + lastName,
+      company,
+      plan,
+      seats: quantity,
+      mrr: (parseFloat(document.getElementById('r-price').value || 0) * quantity * (1 - (parseFloat(document.getElementById('r-discount').value) || 0)/100)).toFixed(0),
+      customerId,
+      subscriptionId
+    };
+    createdRecords.push(record);
+    contractsProcessed++;
+
+    updateDashboard();
+    showSuccessPanel(customerId, subscriptionId, firstName + ' ' + lastName, company);
+
+  } catch(e) {
+    document.getElementById('confirm-error-msg').textContent = e.message;
+    document.getElementById('confirm-error').classList.remove('hidden');
+    btn.disabled = false;
+    btn.textContent = '✅ Approve & Create in Chargebee';
+  }
+}
+
+function showSuccessPanel(custId, subId, name, company) {
+  document.getElementById('success-ids').innerHTML = `
+    <div class="success-id-row">
+      <span class="success-id-key">Customer ID</span>
+      <span class="success-id-val">${custId}</span>
+    </div>
+    <div class="success-id-row">
+      <span class="success-id-key">Subscription ID</span>
+      <span class="success-id-val">${subId}</span>
+    </div>
+    <div class="success-id-row">
+      <span class="success-id-key">Customer Name</span>
+      <span class="success-id-val">${name}</span>
+    </div>
+    <div class="success-id-row">
+      <span class="success-id-key">Company</span>
+      <span class="success-id-val">${company}</span>
+    </div>
+  `;
+  setStep(5);
+  showPanel('success');
+}
+
+// ══════════════════════════════════════════
+// DASHBOARD UPDATE
+// ══════════════════════════════════════════
+function updateDashboard() {
+  const safely = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  safely('dash-sub-count', createdRecords.length);
+  safely('dash-cust-count', createdRecords.length);
+  safely('dash-contract-count', contractsProcessed);
+  safely('dash-sub-change', createdRecords.length === 1 ? '1 created via AI' : createdRecords.length + ' created via AI');
+  const tbody = document.getElementById('recent-contracts-table');
+  if (tbody) {
+    if (createdRecords.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No contracts processed yet.</td></tr>';
+    } else {
+      tbody.innerHTML = createdRecords.slice().reverse().map(r => `
+        <tr>
+          <td><strong>${r.company}</strong><br><span style="font-size:11px;color:#64748b">${r.customer}</span></td>
+          <td><span style="background:#ede9fe;color:#6366f1;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600">${r.plan}</span></td>
+          <td>${r.seats}</td>
+          <td>${r.currency || 'USD'} ${r.mrr}</td>
+          <td><span style="background:#d1fae5;color:#065f46;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600">✓ Active</span></td>
+        </tr>
+      `).join('');
+    }
+  }
+}
+
+// ══════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════
+function showPanel(name) {
+  ['upload','processing','review','confirm','success'].forEach(p => {
+    document.getElementById('panel-' + p).classList.add('hidden');
+  });
+  document.getElementById('panel-' + name).classList.remove('hidden');
+}
+
+function setStep(n) {
+  for (let i = 1; i <= 5; i++) {
+    const step = document.getElementById('step-' + i);
+    step.classList.remove('active','done');
+    if (i < n) step.classList.add('done');
+    else if (i === n) step.classList.add('active');
+  }
+  for (let i = 1; i <= 4; i++) {
+    const conn = document.getElementById('conn-' + i);
+    if (conn) conn.classList.toggle('done', i < n);
+  }
+}
+
+function goBack(panel) {
+  if (panel === 'upload') { setStep(1); showPanel('upload'); }
+  else if (panel === 'review') { setStep(3); showPanel('review'); }
+}
+
+function resetAndUploadAnother() {
+  currentFile = null;
+  extractedData = null;
+  document.getElementById('file-input').value = '';
+  document.getElementById('upload-zone-wrap').classList.remove('hidden');
+  document.getElementById('file-selected-wrap').classList.add('hidden');
+  document.getElementById('extract-btn').disabled = true;
+  // Reset proc steps
+  const labels = ['⏳ Parsing PDF document...','🔍 Identifying customer details...','💳 Extracting billing configuration...','📋 Structuring subscription data...'];
+  ['proc-1','proc-2','proc-3','proc-4'].forEach((id,i) => {
+    document.getElementById(id).className = i === 0 ? 'proc-step active' : 'proc-step';
+    document.getElementById(id).textContent = labels[i];
+  });
+  setStep(1);
+  showPanel('upload');
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = () => reject(new Error('File read failed'));
+    reader.readAsDataURL(file);
+  });
+}
+
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// Init
+showPage('upload');
+
+function setTab(el) {
+  document.querySelectorAll('.chart-period-row .chart-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// Generate realistic-looking date labels Apr 5 to May 3
+function makeLabels() {
+  const labels = [];
+  const start = new Date('2025-04-01');
+  for (let i = 0; i < 33; i++) {
+    const d = new Date(start); d.setDate(d.getDate() + i);
+    const mo = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];
+    labels.push(d.getDate() === 1 || d.getDate() === 5 || d.getDate() % 7 === 0 ? mo+' '+d.getDate() : '');
+  }
+  return labels;
+}
+
+function rnd(base, variance, n) {
+  return Array.from({length:n}, () => Math.max(0, base + (Math.random()-0.5)*2*variance));
+}
+
+function initCharts() {
+  if (window._chartsInited) return;
+  window._chartsInited = true;
+  const n = 33;
+  const labels = makeLabels();
+  const blue = '#60a5fa'; const blueFill = 'rgba(147,197,253,0.3)';
+
+  const makeLine = (id, data, isPercent, isFlat) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    new Chart(el, {
+      type: 'line',
+      data: { labels, datasets: [{ data, borderColor: blue, backgroundColor: blueFill, fill: true, tension: isFlat ? 0.6 : 0.3, pointRadius: data.map((_,i) => i===data.length-1 ? 4 : 0), pointBackgroundColor: '#3b82f6', borderWidth: 1.5 }] },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => isPercent ? ctx.parsed.y.toFixed(2)+'%' : '₹'+Math.round(ctx.parsed.y).toLocaleString('en-IN') } } },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { size: 9 }, color: '#94a3b8', maxRotation: 0 } },
+          y: { grid: { color: '#f1f5f9', lineWidth: 1, drawBorder: false }, border: { display: false }, ticks: { font: { size: 9 }, color: '#94a3b8', maxTicksLimit: 5, callback: v => isPercent ? v : (v>=1000?(v/1000).toFixed(v%1000===0?0:1)+'k':v) } }
+        }
+      }
+    });
+  };
+
+  // Volatile charts
+  makeLine('c-billing',     rnd(3000,1200,n));
+  makeLine('c-new-billing', rnd(250,200,n));
+  makeLine('c-payments',    rnd(2800,1100,n));
+  makeLine('c-refunds',     rnd(40,60,n));
+  // Smooth upward MRR and CMRR
+  makeLine('c-mrr',  Array.from({length:n},(_,i)=>81800+i*95+(Math.random()-0.3)*200), false, true);
+  makeLine('c-cmrr', Array.from({length:n},(_,i)=>81700+i*120+(Math.random()-0.3)*200), false, true);
+  makeLine('c-signups',     rnd(40,28,n));
+  makeLine('c-activations', rnd(5,5,n));
+  makeLine('c-churn',       rnd(2.5,2.5,n), true);
+  makeLine('c-credits',     rnd(40,60,n));
+}
+
+// showPage handles chart init directly
+</script>
+</body>
+</html>
