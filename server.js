@@ -64,9 +64,28 @@ const server = http.createServer(async (req, res) => {
 
       const GROQ_KEY = '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';
 
-      // Extract text from PDF — try pdf2json first, then Python pypdf fallback
+      // Extract text from PDF — pdf2json for uncompressed, ASCII85+zlib for compressed
       const pdfBuffer = Buffer.from(pdfBase64, 'base64');
       let rawText = '';
+
+      // ASCII85 decoder (handles ReportLab compressed PDFs)
+      function ascii85decode(src) {
+        src = src.replace(/\s/g, '').replace(/~>$/, '');
+        const out = [];
+        let i = 0;
+        while (i < src.length) {
+          if (src[i] === 'z') { out.push(0,0,0,0); i++; continue; }
+          const group = src.slice(i, i+5);
+          if (group.length === 0) break;
+          let acc = 0;
+          for (let j = 0; j < 5; j++) acc = acc * 85 + (j < group.length ? group.charCodeAt(j) - 33 : 84);
+          const bytes = [(acc>>>24)&0xff,(acc>>>16)&0xff,(acc>>>8)&0xff,acc&0xff];
+          const take = group.length < 5 ? group.length - 1 : 4;
+          for (let j = 0; j < take; j++) out.push(bytes[j]);
+          i += 5;
+        }
+        return Buffer.from(out);
+      }
 
       // Method 1: pdf2json (works for uncompressed PDFs)
       try {
@@ -92,39 +111,54 @@ const server = http.createServer(async (req, res) => {
         if (rawText.length < 50) rawText = '';
       } catch(e) { console.log('pdf2json failed:', e.message); rawText = ''; }
 
-      // Method 2: Python pypdf (handles compressed/ASCII85 PDFs)
-      if (!rawText) {
+      // Method 2: ASCII85 + FlateDecode (handles ReportLab/compressed PDFs)
+      if (!rawText || rawText.length < 50) {
         try {
-          const tmpFile = require('path').join(require('os').tmpdir(), 'cb_contract_' + Date.now() + '.pdf');
-          require('fs').writeFileSync(tmpFile, pdfBuffer);
-          const pyScript = 'from pypdf import PdfReader; r = PdfReader(\'' + tmpFile.replace(/\\/g, '/') + '\'); print(chr(10).join(p.extract_text() or \"\" for p in r.pages))';
-          // Try python3 first, then python
-          rawText = await new Promise((resolve) => {
-            const tryPython = (cmd) => {
-              execFile(cmd, ['-c', pyScript], { timeout: 10000 }, (err, stdout) => {
-                if (!err && stdout && stdout.trim().length > 20) {
-                  resolve(stdout.trim());
-                } else if (cmd === 'python3') {
-                  tryPython('python');
-                } else {
-                  resolve('');
+          const zlib = require('zlib');
+          const str = pdfBuffer.toString('binary');
+          let allText = '';
+          // Find all streams
+          let searchStr = str;
+          let offset = 0;
+          while (true) {
+            const sIdx = searchStr.indexOf('stream');
+            if (sIdx < 0) break;
+            const eIdx = searchStr.indexOf('endstream', sIdx);
+            if (eIdx < 0) break;
+            const streamContent = searchStr.slice(sIdx + 7, eIdx - 1);
+            // Try ASCII85 + inflate
+            try {
+              const decoded = ascii85decode(streamContent);
+              const inflated = zlib.inflateSync(decoded).toString('latin1');
+              const texts = inflated.match(/\(([^)]{1,300})\)/g) || [];
+              for (const t of texts) {
+                const clean = t.slice(1,-1).replace(/\\[0-9]{3}/g,' ');
+                if (/[a-zA-Z@.]{2,}/.test(clean)) allText += clean + ' ';
+              }
+            } catch(e2) {
+              // Try direct inflate
+              try {
+                const buf2 = Buffer.from(streamContent, 'binary');
+                const inflated = zlib.inflateSync(buf2).toString('latin1');
+                const texts = inflated.match(/\(([^)]{1,300})\)/g) || [];
+                for (const t of texts) {
+                  const clean = t.slice(1,-1);
+                  if (/[a-zA-Z@.]{2,}/.test(clean)) allText += clean + ' ';
                 }
-              });
-            };
-            tryPython('python3');
-          });
-          try { require('fs').unlinkSync(tmpFile); } catch(e) {}
-        } catch(e) { console.log('Python failed:', e.message); rawText = ''; }
+              } catch(e3) {}
+            }
+            searchStr = searchStr.slice(eIdx + 9);
+          }
+          if (allText.trim().length > 50) rawText = allText.replace(/\s+/g,' ').trim();
+        } catch(e) { console.log('ASCII85 extraction failed:', e.message); }
       }
 
-      // Method 3: Raw buffer text extraction (last resort)
+      // Method 3: Raw printable strings fallback
       if (!rawText || rawText.length < 50) {
         const latin = pdfBuffer.toString('latin1');
-        const parens = latin.match(/\(([^)]{2,200})\)/g) || [];
-        const words = parens
-          .map(p => { try { return decodeURIComponent(p.slice(1,-1)); } catch(e) { return p.slice(1,-1); } })
-          .filter(t => /[a-zA-Z]{3,}/.test(t) && !/^[^a-zA-Z]*$/.test(t));
-        rawText = words.join(' ').replace(/\s+/g, ' ').trim();
+        const matches = latin.match(/[ -~]{5,}/g) || [];
+        const meaningful = matches.filter(m => /[a-zA-Z]{3,}/.test(m) && !/^[^a-zA-Z]*$/.test(m));
+        rawText = meaningful.join(' ').replace(/\s+/g,' ').trim().slice(0, 5000);
       }
 
             console.log('PDF text extracted, length:', rawText.length);
