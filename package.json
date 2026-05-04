@@ -1,4 +1,11 @@
 {
+  "name": "chargebee-contract-intelligence",
+  "version": "1.0.0",
+  "description": "AI-powered contract to subscription automation",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
   "dependencies": {
     "pdf2json": "^4.0.3"
   }
