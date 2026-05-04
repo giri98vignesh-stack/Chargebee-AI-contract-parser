@@ -176,7 +176,12 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'POST' && req.url === '/api/chargebee') {
     try {
       const body = await readBody(req);
-      const { cbSite, cbKey, endpoint, formData } = JSON.parse(body.toString());
+      const parsed = JSON.parse(body.toString());
+      const endpoint = parsed.endpoint;
+      const formData = parsed.formData;
+      // Use hardcoded Chargebee credentials — ignore what browser sends
+      const cbSite = 'girivignesh-test';
+      const cbKey = 'test_UwfNYZNdkseBeC0RQcd1ykGM4N8b3mgyN';
 
       console.log('Chargebee call:', endpoint);
       console.log('FormData:', formData.slice(0, 200));
