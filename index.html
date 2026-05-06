@@ -1186,11 +1186,6 @@ async function startExtraction() {
 
   const cbSite = 'girivignesh-test';
   const cbKey = 'test_UwfNYZNdkseBeC0RQcd1ykGM4N8b3mgyN';
-  if (!cbSite || !cbKey) {
-    showUploadError('Please enter your Chargebee site name and API key.');
-    return;
-  }
-
   hideUploadError();
   setStep(2);
   showPanel('processing');
