@@ -1184,8 +1184,8 @@ function hideUploadError() { document.getElementById('upload-error').classList.a
 async function startExtraction() {
   if (!currentFile) return;
 
-  const cbSite = document.getElementById('cb-site').value.trim();
-  const cbKey = document.getElementById('cb-key').value.trim();
+  const cbSite = 'girivignesh-test';
+  const cbKey = 'test_UwfNYZNdkseBeC0RQcd1ykGM4N8b3mgyN';
   if (!cbSite || !cbKey) {
     showUploadError('Please enter your Chargebee site name and API key.');
     return;
@@ -1378,8 +1378,8 @@ async function approveAndCreate() {
   btn.textContent = '⏳ Creating records...';
   document.getElementById('confirm-error').classList.add('hidden');
 
-  const cbSite = document.getElementById('cb-site').value.trim();
-  const cbKey = document.getElementById('cb-key').value.trim();
+  const cbSite = 'girivignesh-test';
+  const cbKey = 'test_UwfNYZNdkseBeC0RQcd1ykGM4N8b3mgyN';
 
   const firstName = document.getElementById('r-first-name').value.trim();
   const lastName = document.getElementById('r-last-name').value.trim();
