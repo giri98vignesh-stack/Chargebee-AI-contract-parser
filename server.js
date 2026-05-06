@@ -221,16 +221,20 @@ const server = http.createServer(async (req, res) => {
       console.log('FormData:', formData.slice(0, 200));
 
       const authHeader = 'Basic ' + Buffer.from(cbKey + ':').toString('base64');
+      // Support GET-style list endpoints passed as POST
+      const isListRequest = endpoint.includes('?');
+      const method = isListRequest ? 'GET' : 'POST';
+      const urlPath = '/api/v2/' + endpoint;
       const result = await httpsRequest({
         hostname: cbSite + '.chargebee.com',
-        path: '/api/v2/' + endpoint,
-        method: 'POST',
+        path: urlPath,
+        method: method,
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
-          'Content-Length': Buffer.byteLength(formData),
+          'Content-Length': isListRequest ? 0 : Buffer.byteLength(formData),
           'Authorization': authHeader
         }
-      }, formData);
+      }, isListRequest ? null : formData);
 
       console.log('Chargebee response status:', result.status);
       console.log('Chargebee response body:', result.body.slice(0, 300));

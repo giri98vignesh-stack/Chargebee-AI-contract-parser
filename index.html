@@ -1461,22 +1461,35 @@ async function approveAndCreate() {
       body: JSON.stringify({ cbSite, cbKey, endpoint: 'items', formData: itemFormData })
     });
 
+    // Try to create item price — if exists, find and use the existing one
     const ipFormData = 'id=' + encodeURIComponent(itemPriceId)
       + '&name=' + encodeURIComponent(plan)
       + '&item_id=' + encodeURIComponent(plan)
       + '&price=' + encodeURIComponent(unitPrice)
       + '&currency_code=' + encodeURIComponent(currency)
       + '&period=1&period_unit=' + encodeURIComponent(periodUnit) + '&pricing_model=flat_fee';
-    await fetch(serverUrl2 + '/api/chargebee', {
+    const ipResp = await fetch(serverUrl2 + '/api/chargebee', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ cbSite, cbKey, endpoint: 'item_prices', formData: ipFormData })
     });
 
-    // Now create subscription using PC2 endpoint
-    // Don't send start_date if it's in the past — Chargebee rejects it
-    const now = Math.floor(Date.now() / 1000);
-    const effectiveStart = startTimestamp > now ? startTimestamp : now;
-    const subV2FormData = 'subscription_items[item_price_id][0]=' + encodeURIComponent(itemPriceId)
+    // Resolve which item price ID to use for subscription
+    let resolvedItemPriceId = itemPriceId;
+    if (!ipResp.ok) {
+      // Item price creation failed — find existing item price for this plan
+      const listResp = await fetch(serverUrl2 + '/api/chargebee', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cbSite, cbKey, endpoint: 'item_prices?item_id=' + encodeURIComponent(plan) + '&limit=5', formData: 'dummy=1' })
+      });
+      if (listResp.ok) {
+        const listData = await listResp.json();
+        const prices = (listData.list || []);
+        if (prices.length > 0) resolvedItemPriceId = prices[0].item_price.id;
+      }
+    }
+
+    // Create subscription
+    const subV2FormData = 'subscription_items[item_price_id][0]=' + encodeURIComponent(resolvedItemPriceId)
       + '&auto_collection=off';
 
     const subResp = await fetch(serverUrl2 + '/api/chargebee', {
