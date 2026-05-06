@@ -1463,7 +1463,7 @@ async function approveAndCreate() {
     const ipFormData = 'id=' + encodeURIComponent(itemPriceId)
       + '&name=' + encodeURIComponent(plan)
       + '&item_id=' + encodeURIComponent(plan)
-      + '&price=' + encodeURIComponent(Math.round(unitPrice * 100))
+      + '&price=' + encodeURIComponent(unitPrice)
       + '&currency_code=' + encodeURIComponent(currency)
       + '&period=1&period_unit=month&pricing_model=flat_fee';
     await fetch(serverUrl2 + '/api/chargebee', {
@@ -1477,8 +1477,6 @@ async function approveAndCreate() {
     const effectiveStart = startTimestamp > now ? startTimestamp : now;
     const subV2FormData = 'subscription_items[item_price_id][0]=' + encodeURIComponent(itemPriceId)
       + '&subscription_items[quantity][0]=' + encodeURIComponent(quantity)
-      + '&subscription_items[unit_price][0]=' + encodeURIComponent(Math.round(unitPrice * 100))
-      + '&payment_intent[gateway_account_id]=offline'
       + '&auto_collection=off';
 
     const subResp = await fetch(serverUrl2 + '/api/chargebee', {
