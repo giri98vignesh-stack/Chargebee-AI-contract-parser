@@ -1446,8 +1446,7 @@ async function approveAndCreate() {
 
     // Product Catalog 2.0 — create item price first, then subscription
     const periodUnit = plan.includes('yearly') ? 'year' : 'month';
-    const periodLabel = plan.includes('yearly') ? 'yearly' : 'monthly';
-    const itemPriceId = plan + '-USD-' + periodLabel;
+    const itemPriceId = plan + '-USD';
     const rawFamilyName = document.getElementById('r-product-family').value.trim() || plan;
     const familyId = rawFamilyName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     const itemFamilyFormData = 'id=' + encodeURIComponent(familyId) + '&name=' + encodeURIComponent(rawFamilyName);
