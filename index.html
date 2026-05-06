@@ -1445,7 +1445,8 @@ async function approveAndCreate() {
       + '&subscription[start_date]=' + encodeURIComponent(startTimestamp);
 
     // Product Catalog 2.0 — create item price first, then subscription
-    const itemPriceId = plan + '-USD-Monthly';
+    const periodLabel = plan.includes('yearly') ? 'yearly' : 'monthly';
+    const itemPriceId = plan + '-USD-' + periodLabel;
     const rawFamilyName = document.getElementById('r-product-family').value.trim() || plan;
     const familyId = rawFamilyName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     const itemFamilyFormData = 'id=' + encodeURIComponent(familyId) + '&name=' + encodeURIComponent(rawFamilyName);
@@ -1465,7 +1466,7 @@ async function approveAndCreate() {
       + '&item_id=' + encodeURIComponent(plan)
       + '&price=' + encodeURIComponent(unitPrice)
       + '&currency_code=' + encodeURIComponent(currency)
-      + '&period=1&period_unit=month&pricing_model=flat_fee';
+      + '&period=1&period_unit=' + encodeURIComponent(periodUnit) + '&pricing_model=flat_fee';
     await fetch(serverUrl2 + '/api/chargebee', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ cbSite, cbKey, endpoint: 'item_prices', formData: ipFormData })
@@ -1476,7 +1477,6 @@ async function approveAndCreate() {
     const now = Math.floor(Date.now() / 1000);
     const effectiveStart = startTimestamp > now ? startTimestamp : now;
     const subV2FormData = 'subscription_items[item_price_id][0]=' + encodeURIComponent(itemPriceId)
-      + '&subscription_items[quantity][0]=' + encodeURIComponent(quantity)
       + '&auto_collection=off';
 
     const subResp = await fetch(serverUrl2 + '/api/chargebee', {
