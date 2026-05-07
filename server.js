@@ -62,7 +62,7 @@ const server = http.createServer(async (req, res) => {
       const body = await readBody(req);
       const { pdfBase64 } = JSON.parse(body.toString());
 
-      const GROQ_KEY = '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';
+      const GROQ_KEY = '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';
 
       // Extract text from PDF — pdf2json for uncompressed, ASCII85+zlib for compressed
       const pdfBuffer = Buffer.from(pdfBase64, 'base64');
